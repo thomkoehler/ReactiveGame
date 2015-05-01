@@ -5,6 +5,7 @@ module Main(main) where
 
 
 import qualified Graphics.UI.SDL as SDL
+import Graphics.UI.SDL.Image as SDLI
 
 import Data.Word
 import Data.Char
@@ -41,20 +42,30 @@ data GraphicsData = GraphicsData
       gdMainSurf :: SDL.Surface
    }
 
-data GameState = GameState
+data GraphicsResources = GraphicsResources
    {
-      posX :: Int,
-      posY :: Int
+      grImage0 :: Image,
+      grImageBackground :: Image
    }
 
+data GameState = GameState
+   {
+      gsPosX :: !Int,
+      gsPosY :: !Int,
+      gsMoveX :: !Int,
+      gsMoveY :: !Int
+   }
+   deriving Show
 
-initialGameState = GameState 10 20
+
+initialGameState = GameState 10 20 0 0
 
 
 main = do
    sdlES <- getSDLEventSource
    gd <- liftIO initGraphics
-   network <- compile $ setupNetwork sdlES gd
+   let gr = GraphicsResources (Image "images/smiley.png") (Image "images/background.png")
+   network <- compile $ setupNetwork sdlES gd gr
    actuate network
    runSDLPump sdlES
    endGraphics
@@ -76,7 +87,7 @@ endGraphics = do
 
 -- | update game state on tick
 updateGS :: Word32 -> GameState -> GameState
-updateGS tick gameState = gameState
+updateGS tick gs = traceShow gs $ gs { gsPosX = gsPosX gs + gsMoveX gs, gsPosY = gsPosY gs + gsMoveY gs }
 
 
 
@@ -84,17 +95,25 @@ updateGS tick gameState = gameState
 updateGSOnKey :: SDL.Keysym -> GameState -> GameState
 updateGSOnKey key gameState =
    case SDL.symKey key of
-      SDL.SDLK_a -> gameState { posX = posX gameState - 1}
-      SDL.SDLK_d -> gameState { posX = posX gameState + 1}
+      SDL.SDLK_a -> gameState { gsMoveX = gsMoveX gameState - 1}
+      SDL.SDLK_d -> gameState { gsMoveX = gsMoveX gameState + 1}
+      SDL.SDLK_w -> gameState { gsMoveY = gsMoveY gameState - 1}
+      SDL.SDLK_y -> gameState { gsMoveY = gsMoveY gameState + 1}
+      SDL.SDLK_s -> gameState { gsMoveX = 0, gsMoveY = 0 }
       _ -> gameState
 
 
-drawGraphic :: GameState -> Graphic
-drawGraphic (GameState x y) = draw (Fill (Just $ SDL.Rect x y 10 10) red) (Mask Nothing 0 0) `over` draw (Fill (Just $ SDL.Rect 0 0 width height) black) (Mask Nothing 0 0)
+drawGraphic :: GraphicsResources -> GameState -> Graphic
+drawGraphic gr (GameState x y _ _) =
+   let
+      background = draw (grImageBackground gr) (Mask Nothing 0 0)
+      image = draw (grImage0 gr) (Mask Nothing x y)
+   in
+      image `over` background
 
 
-setupNetwork :: Frameworks t => SDLEventSource -> GraphicsData -> Moment t ()
-setupNetwork es gd = do
+setupNetwork :: Frameworks t => SDLEventSource -> GraphicsData -> GraphicsResources -> Moment t ()
+setupNetwork es gd gr = do
    eTickDiff <- tickDiffEvent es
    esdl <- sdlEvent es
 
@@ -103,7 +122,7 @@ setupNetwork es gd = do
       eGSChange= (updateGS <$> eTickDiff) `union` (updateGSOnKey <$> keyDownEvent esdl)
       bGameState = accumB initialGameState eGSChange
 
-   renderGraph (drawGraphic <$> bGameState) bScreen
+   renderGraph (drawGraphic gr<$> bGameState) bScreen
    return ()
 
 
