@@ -7,6 +7,7 @@ module Main(main) where
 import qualified Graphics.UI.SDL as SDL
 
 import Data.Word
+import Data.Char
 
 import Reactive.Banana
 import Reactive.Banana.SDL
@@ -14,6 +15,8 @@ import Reactive.Banana.SDL.Graphics
 import Reactive.Banana.Frameworks (actuate, Frameworks)
 
 import Control.Monad.IO.Class(liftIO)
+
+import Debug.Trace
 
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -29,6 +32,10 @@ black :: SDL.Color
 black = SDL.Color 0 0 0
 
 
+red :: SDL.Color
+red = SDL.Color 255 0 0
+
+
 data GraphicsData = GraphicsData
    {
       gdMainSurf :: SDL.Surface
@@ -36,10 +43,12 @@ data GraphicsData = GraphicsData
 
 data GameState = GameState
    {
+      posX :: Int,
+      posY :: Int
    }
 
 
-initialGameState = GameState
+initialGameState = GameState 10 20
 
 
 main = do
@@ -70,13 +79,18 @@ updateGS :: Word32 -> GameState -> GameState
 updateGS tick gameState = gameState
 
 
+
 -- | update game state on key press
 updateGSOnKey :: SDL.Keysym -> GameState -> GameState
-updateGSOnKey key gameState = gameState
+updateGSOnKey key gameState =
+   case SDL.symKey key of
+      SDL.SDLK_a -> gameState { posX = posX gameState - 1}
+      SDL.SDLK_d -> gameState { posX = posX gameState + 1}
+      _ -> gameState
 
 
-startGraphic :: GameState -> Graphic
-startGraphic _ = draw (Fill (Just $ SDL.Rect 0 0 width height) black) (Mask Nothing 0 0)
+drawGraphic :: GameState -> Graphic
+drawGraphic (GameState x y) = draw (Fill (Just $ SDL.Rect x y 10 10) red) (Mask Nothing 0 0) `over` draw (Fill (Just $ SDL.Rect 0 0 width height) black) (Mask Nothing 0 0)
 
 
 setupNetwork :: Frameworks t => SDLEventSource -> GraphicsData -> Moment t ()
@@ -89,7 +103,7 @@ setupNetwork es gd = do
       eGSChange= (updateGS <$> eTickDiff) `union` (updateGSOnKey <$> keyDownEvent esdl)
       bGameState = accumB initialGameState eGSChange
 
-   renderGraph (startGraphic <$> bGameState) bScreen
+   renderGraph (drawGraphic <$> bGameState) bScreen
    return ()
 
 
