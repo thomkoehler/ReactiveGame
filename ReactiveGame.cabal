@@ -1,0 +1,21 @@
+name: ReactiveGame
+version: 0.0.1
+cabal-version: >=1.2
+build-type: Simple
+license: AllRightsReserved
+license-file: ""
+description:
+data-dir: ""
+
+executable ReactiveGame
+    build-depends: 
+      QuickCheck -any, 
+      base -any, 
+      SDL -any, 
+      reactive-banana -any, 
+      reactive-banana-sdl -any, 
+      transformers -any
+      
+    main-is: Main.hs
+    buildable: True
+    hs-source-dirs: src
