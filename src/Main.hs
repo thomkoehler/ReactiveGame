@@ -18,6 +18,7 @@ import Reactive.Banana.Frameworks (actuate, Frameworks)
 import Control.Monad.IO.Class(liftIO)
 
 import Debug.Trace
+import Game
 
 -----------------------------------------------------------------------------------------------------------------------
 
@@ -87,7 +88,7 @@ endGraphics = do
 
 -- | update game state on tick
 updateGS :: Word32 -> GameState -> GameState
-updateGS tick gs = traceShow gs $ gs { gsPosX = gsPosX gs + gsMoveX gs, gsPosY = gsPosY gs + gsMoveY gs }
+updateGS tick gs = gs { gsPosX = gsPosX gs + gsMoveX gs, gsPosY = gsPosY gs + gsMoveY gs }
 
 
 
