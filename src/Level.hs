@@ -1,50 +1,55 @@
 
 -----------------------------------------------------------------------------------------------------------------------
 
-{-# LANGUAGE PatternSynonyms, DeriveDataTypeable, StandaloneDeriving  #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module Level(Level(..), level) where
 
 import Data.Array.IArray
-import Data.Data
-import Data.Typeable
 
+import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
-import qualified Language.Haskell.TH as TH
-
-import Debug.Trace
+import Language.Haskell.TH
 
 -----------------------------------------------------------------------------------------------------------------------
 
 pattern Wall = 'w'
 pattern Empty = ' '
 
+
 newtype Level = Level
    {
       lItems :: Array (Int, Int) Char
    }
-   deriving(Data, Typeable, Show)
+   deriving(Show)
 
 
 level :: QuasiQuoter
 level = QuasiQuoter
    {
-      quoteExp = \txt -> dataToExpQ (const Nothing) (loadLevel txt),
+      quoteExp = loadLevel,
       quotePat = undefined,
       quoteType = undefined,
       quoteDec = undefined
    }
 
 
-loadLevel :: String -> Level
-loadLevel txt =
-   let
-      (l:ls) = filter (\l -> not (null l)) $ lines txt
-      w = length l
-      h = length ls + 1
-      a = listArray ((0, 0), (w - 1, h - 1)) (concat (l:ls))
-   in
-      Level { lItems = a }
-
-
+loadLevel :: String -> Q Exp
+loadLevel txt = do
+   let 
+      (l:ls) = filter (not . null) $ lines $ filter (/= '\r') txt
+      w = toInteger $ length l
+      h = toInteger $ length ls + 1
+      str = concat (l:ls)
+      listArray = mkName "listArray"
+      levelCon = mkName "Level"
+   return $ 
+      AppE
+         (ConE levelCon) 
+         (AppE 
+            (AppE 
+               (VarE listArray) 
+               (TupE [TupE [LitE (IntegerL 0),LitE (IntegerL 0)],TupE [LitE (IntegerL (w - 1)),LitE (IntegerL (h - 1))]])) 
+               (LitE (StringL str)))
+   
 -----------------------------------------------------------------------------------------------------------------------
