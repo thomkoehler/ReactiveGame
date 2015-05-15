@@ -1,5 +1,5 @@
 
------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 module Main(main) where
 
@@ -20,7 +20,7 @@ import Control.Monad.IO.Class(liftIO)
 import Debug.Trace
 import Game
 
------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 width :: Int
 width = 640
@@ -108,9 +108,10 @@ drawGraphic :: GraphicsResources -> GameState -> Graphic
 drawGraphic gr (GameState x y _ _) =
    let
       background = draw (grImageBackground gr) (Mask Nothing 0 0)
+      level = draw (head allLevels) (Mask Nothing 0 0)
       image = draw (grImage0 gr) (Mask Nothing x y)
    in
-      image `over` background
+      image `over` level `over` background
 
 
 setupNetwork :: Frameworks t => SDLEventSource -> GraphicsData -> GraphicsResources -> Moment t ()
@@ -127,6 +128,6 @@ setupNetwork es gd gr = do
    return ()
 
 
------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 
 
