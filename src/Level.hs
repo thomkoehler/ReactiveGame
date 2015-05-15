@@ -6,6 +6,7 @@
 module Level(Level(..), level) where
 
 import Data.Array.IArray
+import Data.List.Split
 
 import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
@@ -16,7 +17,15 @@ import Graphics.UI.SDL.Rect
 import Graphics.UI.SDL.Color
 import Reactive.Banana.SDL.Graphics.Util
 
+import Debug.Trace
+
 -----------------------------------------------------------------------------------------------------------------------
+
+wallWidth :: Int
+wallWidth = 50
+
+wallHeight :: Int
+wallHeight = 50
 
 pattern Wall = 'w'
 pattern Empty = ' '
@@ -26,13 +35,33 @@ newtype Level = Level
    {
       lItems :: Array (Int, Int) Char
    }
-   deriving(Show)
+
+
+instance Show Level where
+   show (Level items) =
+      let
+         (_, (w, _)) = bounds items
+      in
+         show items ++ "\n" ++ unlines (chunksOf (w + 1) (elems items))
 
 
 drawLevel :: Int -> Int -> Level -> Graphic
-drawLevel x y level = do
-   let fill = Fill { _fillClip = Just (Rect 20 20 100 100), _fillColor = Color 0 0 255}
-   draw fill (Mask Nothing 20 20)
+drawLevel posX posY level = foldl1 over $ map mfun $ filter ffun $ assocs $ lItems level
+   where
+      ffun (_, t) = t == Wall
+      mfun ((x, y), _) =
+         let
+            xx = wallWidth * x + posX
+            yy = wallHeight * y + posY
+         in
+            draw (Fill (Just (Rect xx yy wallWidth wallHeight)) (Color 0 0 255)) (Mask Nothing xx yy)
+
+
+
+
+
+multiDraw :: [Graphic] -> Graphic
+multiDraw = foldl1 over
 
 
 instance Draw Level Mask where

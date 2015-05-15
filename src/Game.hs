@@ -19,9 +19,15 @@ allLevels =
 
 
 level0 = [level|
+wwww
+w  w
+wwww
+|]
+
+level1 = [level|
 wwwwwwwwww
 w        w
-w        w
+w    w   w
 w        w
 wwwwwwwwww
 |]

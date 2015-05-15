@@ -5,14 +5,14 @@ build-type: Simple
 license: AllRightsReserved
 license-file: ""
 data-dir: ""
- 
+
 executable ReactiveGame
     build-depends: QuickCheck -any, base -any, SDL -any,
                    SDL-image -any, reactive-banana -any, reactive-banana-sdl -any,
-                   transformers -any, array -any, template-haskell -any
+                   transformers -any, array -any, template-haskell -any, split -any
     main-is: Main.hs
     buildable: True
     hs-source-dirs: src
     other-modules: Game
- 
- 
+
+
